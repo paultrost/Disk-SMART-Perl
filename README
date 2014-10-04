@@ -1,39 +1,61 @@
-Disk-SMART
-
-This module requires that smartctl be accessed as root. If you do not wish to install the module as root then you will need to make smartctl SETUID as root with "chmod u+s <path/to/smartctl>"
-
-To install this module, run the following commands:
-
-	perl Makefile.PL
-	make
-	sudo make test
-	sudo make install
-
-SUPPORT AND DOCUMENTATION
-
-After installing, you can find documentation for this module with the
-perldoc command.
-
-    perldoc Disk::SMART
-
-You can also look for information at:
-
-    RT, CPAN's request tracker (report bugs here)
-        http://rt.cpan.org/NoAuth/Bugs.html?Dist=Disk-SMART
-
-    AnnoCPAN, Annotated CPAN documentation
-        http://annocpan.org/dist/Disk-SMART
-
-    CPAN Ratings
-        http://cpanratings.perl.org/d/Disk-SMART
-
-    Search CPAN
-        http://search.cpan.org/dist/Disk-SMART/
+Disk::SMART(3)        User Contributed Perl Documentation       Disk::SMART(3)
 
 
-LICENSE AND COPYRIGHT
 
-Copyright 2014 Paul Trost
-This script is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License v2, or at your option any later version.
-<http://gnu.org/licenses/gpl.html>
+NNAAMMEE
+       Disk::SMART - Provides an interface to smartctl
 
+VVEERRSSIIOONN
+       Version 0.01
+
+SSYYNNOOPPSSIISS
+       Disk::SMART is an object ooriented module that provides an interface to
+       get SMART disk info from a device as well as initiate testing.
+
+           use Disk::SMART;
+
+           my $smart = Disk::SMART->new('/dev/sda');
+
+MMEETTHHOODDSS
+   nneeww ((DDEEVVIICCEE))
+       Instantiates the Disk::SMART object
+
+       "DEVICE" - Device identifier of SSD / Hard Drive
+
+           my $smart = Disk::SMART->new( 'dev/sda', '/dev/sdb' );
+
+GGeettttiinngg iinnffoorrmmaattiioonn ffrroomm ssmmaarrttccttll
+   ggeett__ddiisskk__tteemmpp ((DDEEVVIICCEE))
+       Returns an array with the temperature of the device in Celsius and
+       Farenheit, or N/A.
+
+       "DEVICE" - Device identifier of SSD / Hard Drive
+
+           my ($temp_c, $temp_f) = $smart->get_disk_temp('/dev/sda');
+
+   ggeett__ddiisskk__hheeaalltthh ((DDEEVVIICCEE))
+       Returns the health of the disk. Output is "PASSED", "FAILED", or "N/A".
+
+       "DEVICE" - Device identifier of SSD / Hard Drive
+
+           my $disk_health = $smart->get_disk_health('/dev/sda');
+
+   ggeett__ddiisskk__mmooddeell ((DDEEVVIICCEE))
+       Returns the model of the device. Output is "<device>: <model>" or
+       "N/A". eg. "/dev/sda: ST3250410AS"
+
+       "DEVICE" - Device identifier of SSD / Hard Drive
+
+           my $disk_model = $smart->get_disk_model('/dev/sda');
+
+AAUUTTHHOORR
+        Paul Trost <paul.trost@trostfamily.org>
+
+LLIICCEENNSSEE AANNDD CCOOPPYYRRIIGGHHTT
+        Copyright 2014.
+        This script is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License v2, or at your option any later version.
+        <http://gnu.org/licenses/gpl.html>
+
+
+
+perl v5.14.2                      2014-10-03                    Disk::SMART(3)
