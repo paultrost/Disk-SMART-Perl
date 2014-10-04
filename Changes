@@ -1,5 +1,15 @@
 Revision history for Disk-SMART
 
+0.03    2014-10-04
+        Added Math::Round to dependency list in Makefile.PL. Credit - Syohei YOSHIDA.
+        Refactored methods to return N/A first before any further proessing is done
+        Cleaned up unit tests
+        get_disk_model() only outputs just the model information now.
+        Added get_disk_errors()
+        Methods now validate the device passed to it, to ensure smartctl has already read it
+        Added unit tests to test passing invalid device to methods
+        Changed to croak() as I didn't feel a trace was necessary with proper error returning.
+
 0.02    2014-10-03
         Added confess to new() in case smartctl cannot find the specified device
 
