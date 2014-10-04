@@ -52,7 +52,12 @@ sub new {
     my $self = bless {}, $class;
 
     foreach my $device (@devices) {
-        $self->{'devices'}->{$device}->{'SMART_OUTPUT'} = qx($smartctl -a $device);
+        my $out = qx($smartctl -a $device);
+        if ( $out =~ /No such device/i ) {
+            confess "Device $device could not be found\n";
+            next;
+        }
+        $self->{'devices'}->{$device}->{'SMART_OUTPUT'} = $out;
     }
 
     return $self;

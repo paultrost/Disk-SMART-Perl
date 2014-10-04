@@ -1,5 +1,8 @@
 Revision history for Disk-SMART
 
+0.02    2014-10-03
+        Added confess to new() in case smartctl cannot find the specified device
+
 0.01    2014-10-03
         First version, released on an unsuspecting world.
 
