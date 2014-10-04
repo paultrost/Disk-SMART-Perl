@@ -82,21 +82,19 @@ sub get_disk_temp {
     my $smart_output = $self->{'devices'}->{$device}->{'SMART_OUTPUT'};
     my ($temp_c) = $smart_output =~ /(Temperature_Celsius.*\n)/;
 
-    if ( defined $temp_c ) {
-        chomp $temp_c;
-        $temp_c =~ s/ //g;
-        $temp_c =~ s/.*-//;
-        $temp_c =~ s/\(.*\)//;
-    }
-
-    if ( !$temp_c || $smart_output =~ qr/S.M.A.R.T. not available/x ) {
+    if ( !defined $temp_c || $smart_output =~ qr/S.M.A.R.T. not available/x ) {
         return 'N/A';
     }
-    else {
-        my $temp_f = round( ( $temp_c * 9 ) / 5 + 32 );
-        return ( $temp_c, $temp_f );
+
+    chomp $temp_c;
+    $temp_c =~ s/ //g;
+    $temp_c =~ s/.*-//;
+    $temp_c =~ s/\(.*\)//;
     }
-    return undef;
+
+    my $temp_f = round( ( $temp_c * 9 ) / 5 + 32 );
+    return ( $temp_c, $temp_f );
+   
 }
 
 =head2 B<get_disk_health (DEVICE)>
@@ -114,14 +112,13 @@ sub get_disk_health {
     my $smart_output = $self->{'devices'}->{$device}->{'SMART_OUTPUT'};
     my ($health) = $smart_output =~ /(SMART overall-health self-assessment.*\n)/;
 
-    if ( defined $health and $health =~ /PASSED|FAILED/x ) {
-        $health =~ s/.*: //;
-        chomp $health;
-        return $health;
-    }
-    else {
+    if ( !defined $health or $health !~ /PASSED|FAILED/x ) {
         return 'N/A';
     }
+
+    $health =~ s/.*: //;
+    chomp $health;
+    return $health;
 }
 
 =head2 B<get_disk_model (DEVICE)>
@@ -139,11 +136,13 @@ sub get_disk_model {
     my $smart_output = $self->{'devices'}->{$device}->{'SMART_OUTPUT'};
     my ($model) = $smart_output =~ /(Device\ Model.*\n)/;
 
-    if ( defined $model ) {
-        $model =~ s/.*:\ //;
-        $model =~ s/^\s+|\s+$//g;    #trim beginning and ending whitepace
+    if ( !defined $model ) {
+        return "$device: N/A";
     }
-    return ($model) ? "$device: $model" : "$device: N/A";
+    
+    $model =~ s/.*:\ //;
+    $model =~ s/^\s+|\s+$//g;    #trim beginning and ending whitepace
+    return "$device: $model";
 }
 
 1;
