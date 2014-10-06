@@ -1,5 +1,9 @@
 Revision history for Disk-SMART
 
+0.03.1  2014-10-06
+        Updated Makefile.PL to better interact with Meta::CPAN
+        Updated pod for clarity
+
 0.03    2014-10-04
         Added Math::Round to dependency list in Makefile.PL. Credit - Syohei YOSHIDA.
         Refactored methods to return N/A first before any further proessing is done

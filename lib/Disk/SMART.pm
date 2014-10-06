@@ -1,21 +1,11 @@
 package Disk::SMART;
-
-use warnings;
-use strict;
-use Carp;
-use Math::Round;
+{
+    $Disk::SMART::VERSION = '0.03.1'
+}
 
 =head1 NAME
 
 Disk::SMART - Provides an interface to smartctl
-
-=head1 VERSION
-
-Version 0.03
-
-=cut
-
-our $VERSION = '0.03';
 
 =head1 SYNOPSIS
 
@@ -28,7 +18,13 @@ Disk::SMART is an object ooriented module that provides an interface to get SMAR
 
 =cut
 
-=head1 METHODS
+use warnings;
+use strict;
+use Carp;
+use Math::Round;
+
+
+=head1 CONSTRUCTOR
 
 =head2 B<new (DEVICE)>
 
@@ -37,6 +33,8 @@ Instantiates the Disk::SMART object
 C<DEVICE> - Device identifier of SSD / Hard Drive
 
     my $smart = Disk::SMART->new( 'dev/sda', '/dev/sdb' );
+
+Returns C<Disk::SMART> object if smartctl is available and can poll the given device.
 
 =cut
 
@@ -59,9 +57,7 @@ sub new {
     return $self;
 }
 
-=head1 Getting information from smartctl
-
-=cut
+=head1 USER METHODS
 
 =head2 B<get_disk_temp (DEVICE)>
 
@@ -180,11 +176,11 @@ __END__
 
 =head1 AUTHOR
 
- Paul Trost <paul.trost@trostfamily.org>
+ Paul Trost <ptrost@cpan.org>
 
 =head1 LICENSE AND COPYRIGHT
 
- Copyright 2014.
+ Copyright 2014 by Paul Trost
  This script is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License v2, or at your option any later version.
  <http://gnu.org/licenses/gpl.html>
 
