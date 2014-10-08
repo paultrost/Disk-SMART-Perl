@@ -1,6 +1,13 @@
 Revision history for Disk-SMART
 
-0.03.1  2014-10-06
+0.05    2014-10-08
+        Separated out data processing from the getter methods. Getter methods now only return hash data.
+        Added methods and unit tests for update_data() and get_disk_attributes(). update_data() can be called at any point in a calling script to update the drive data. This makes it where Disk::SMART can be used in a script called by cron, or a continuously running daemon.
+        Updated MANIFEST to include LICENSE file
+        Changes to satisfy perl critic
+        Simplified get_disk_temp with substr to read the disk temp
+
+0.04    2014-10-06
         Updated Makefile.PL to better interact with Meta::CPAN
         Updated pod for clarity
 
