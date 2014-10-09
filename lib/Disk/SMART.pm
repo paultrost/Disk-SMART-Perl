@@ -57,19 +57,35 @@ sub new {
 =head1 USER METHODS
 
 
-=head2 B<get_disk_temp(DEVICE)>
+=head2 B<get_disk_attributes(DEVICE)>
 
-Returns an array with the temperature of the device in Celsius and Farenheit, or N/A.
+Returns hash of the SMART disk attributes and values
 
-C<DEVICE> - Device identifier of SSD / Hard Drive
+C<DEVICE> - Device identifier of SSD/ Hard Drive
 
-    my ($temp_c, $temp_f) = $smart->get_disk_temp('/dev/sda');
+    my %disk_attributes = $smart->get_disk_attributes('/dev/sda');
 
 =cut
 
-sub get_disk_temp {
+sub get_disk_attributes {
     my ( $self, $device ) = @_;
-    return $self->{'devices'}->{$device}->{'temp'};
+    return $self->{'devices'}->{$device}->{'attributes'};
+}
+
+
+=head2 B<get_disk_errors(DEVICE)>
+
+Returns scalar of any listed errors
+
+C<DEVICE> - Device identifier of SSD/ Hard Drive
+
+    my $disk_errors = $smart->get_disk_errors('/dev/sda');
+
+=cut
+
+sub get_disk_errors {
+    my ( $self, $device ) = @_;
+    return $self->{'devices'}->{$device}->{'errors'};
 }
 
 
@@ -105,35 +121,19 @@ sub get_disk_model {
 }
 
 
-=head2 B<get_disk_errors(DEVICE)>
+=head2 B<get_disk_temp(DEVICE)>
 
-Returns scalar of any listed errors
+Returns an array with the temperature of the device in Celsius and Farenheit, or N/A.
 
-C<DEVICE> - Device identifier of SSD/ Hard Drive
+C<DEVICE> - Device identifier of SSD / Hard Drive
 
-    my $disk_errors = $smart->get_disk_errors('/dev/sda');
-
-=cut
-
-sub get_disk_errors {
-    my ( $self, $device ) = @_;
-    return $self->{'devices'}->{$device}->{'errors'};
-}
-
-
-=head2 B<get_disk_attributes(DEVICE)>
-
-Returns hash of the SMART disk attributes and values
-
-C<DEVICE> - Device identifier of SSD/ Hard Drive
-
-    my %disk_attributes = $smart->get_disk_attributes('/dev/sda');
+    my ($temp_c, $temp_f) = $smart->get_disk_temp('/dev/sda');
 
 =cut
 
-sub get_disk_attributes {
+sub get_disk_temp {
     my ( $self, $device ) = @_;
-    return $self->{'devices'}->{$device}->{'attributes'};
+    return @{ $self->{'devices'}->{$device}->{'temp'} };
 }
 
 
@@ -224,7 +224,7 @@ sub _process_disk_model {
     my ( $self, $device ) = @_;
     $self->_validate_param($device);
     my $smart_output = $self->{'devices'}->{$device}->{'SMART_OUTPUT'};
-    my ($model) = $smart_output =~ /(Cevice\ Model.*\n)/;
+    my ($model) = $smart_output =~ /(Device\ Model.*\n)/;
 
     if ( !defined $model ) {
         $self->{'devices'}->{$device}->{'model'} = 'N/A';
@@ -253,7 +253,7 @@ sub _process_disk_temp {
     $temp_c =~ s/ //g;
 
     my $temp_f = round( ( $temp_c * 9 ) / 5 + 32 );
-    $self->{'devices'}->{$device}->{'temp'} = [ $temp_c, $temp_f ];
+    $self->{'devices'}->{$device}->{'temp'} = [ ( int $temp_c, int $temp_f ) ];
     return;
 }
 
