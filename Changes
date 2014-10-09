@@ -1,5 +1,8 @@
 Revision history for Disk-SMART
 
+0.06    2014-10-09
+        Fixed issue with N/A disk temp not returning correctly and causing failure
+
 0.05    2014-10-08
         Separated out data processing from the getter methods. Getter methods now only return hash data.
         Added methods and unit tests for update_data() and get_disk_attributes(). update_data() can be called at any point in a calling script to update the drive data. This makes it where Disk::SMART can be used in a script called by cron, or a continuously running daemon.
