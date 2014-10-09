@@ -6,7 +6,7 @@ use Carp;
 use Math::Round;
 
 {
-    $Disk::SMART::VERSION = '0.05'
+    $Disk::SMART::VERSION = '0.06'
 }
 
 our $smartctl = '/usr/sbin/smartctl';
@@ -244,7 +244,7 @@ sub _process_disk_temp {
     my ($temp_c) = $smart_output =~ /(Temperature_Celsius.*\n)/;
 
     if ( !defined $temp_c || $smart_output =~ qr/S.M.A.R.T. not available/x ) {
-        $self->{'devices'}->{$device}->{'temp'} = 'N/A';
+        $self->{'devices'}->{$device}->{'temp'} = [( 'N/A' )];
         return;
     }
 
