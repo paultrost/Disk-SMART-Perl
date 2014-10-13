@@ -1,26 +1,122 @@
 use warnings;
 use strict;
-use Test::More 'tests' => 12;
+use Test::More 'tests' => 13;
+use Test::Fatal;
 use Disk::SMART;
+use Data::Dumper;
 
-my $disk  = '/dev/sda';
-my $smart = Disk::SMART->new($disk);
+my $test_data = 
+'smartctl 5.41 2011-06-09 r3365 [x86_64-linux-2.6.32-32-pve] (local build)
+Copyright (C) 2002-11 by Bruce Allen, http://smartmontools.sourceforge.net
 
-ok( $smart->get_disk_temp($disk), 'get_disk_temp() returns drive temperature or N/A' );
-is( eval{$smart->get_disk_temp('/dev/sdz')}, undef, 'get_disk_temp() returns failure when passed invalid device' );
+=== START OF INFORMATION SECTION ===
+Model Family:     Seagate Barracuda 7200.10
+Device Model:     ST3250410AS
+Serial Number:    6RYBDDDQ
+Firmware Version: 3.AAF
+User Capacity:    250,059,350,016 bytes [250 GB]
+Sector Size:      512 bytes logical/physical
+Device is:        In smartctl database [for details use: -P show]
+ATA Version is:   7
+ATA Standard is:  Exact ATA specification draft version not indicated
+Local Time is:    Thu Oct  9 17:36:15 2014 CDT
+SMART support is: Available - device has SMART capability.
+SMART support is: Enabled
 
-like( $smart->get_disk_health($disk), qr/PASSED|FAILED|N\/A/, 'get_disk_health() returns health status or N/A' );
-is( eval{$smart->get_disk_health('/dev/sdz')}, undef, 'get_disk_health() returns failure when passed invalid device' );
+=== START OF READ SMART DATA SECTION ===
+SMART overall-health self-assessment test result: PASSED
 
-cmp_ok( length $smart->get_disk_model($disk), '>=', 3, 'get_disk_model() returns disk model or N/A' );
-is( eval{$smart->get_disk_errors('/dev/sdz')}, undef, 'get_disk_model() returns failure when passed invalid device' );
+General SMART Values:
+Offline data collection status:  (0x82) Offline data collection activity
+                                        was completed without error.
+                                        Auto Offline Data Collection: Enabled.
+Self-test execution status:      (   0) The previous self-test routine completed
+                                        without error or no self-test has ever
+                                        been run.
+Total time to complete Offline
+data collection:                (  430) seconds.
+Offline data collection
+capabilities:                    (0x5b) SMART execute Offline immediate.
+                                        Auto Offline data collection on/off support.
+                                        Suspend Offline collection upon new
+                                        command.
+                                        Offline surface scan supported.
+                                        Self-test supported.
+                                        No Conveyance Self-test supported.
+                                        Selective Self-test supported.
+SMART capabilities:            (0x0003) Saves SMART data before entering
+                                        power-saving mode.
+                                        Supports SMART auto save timer.
+Error logging capability:        (0x01) Error logging supported.
+                                        General Purpose Logging supported.
+Short self-test routine
+recommended polling time:        (   1) minutes.
+Extended self-test routine
+recommended polling time:        (  64) minutes.
+SCT capabilities:              (0x0001) SCT Status supported.
 
-like( $smart->get_disk_errors($disk), qr/\w+/, 'get_disk_errors() returns proper string' );
-is( eval{$smart->get_disk_errors('/dev/sdz')}, undef, 'get_disk_errors() returns failure when passed invalid device' );
+SMART Attributes Data Structure revision number: 10
+Vendor Specific SMART Attributes with Thresholds:
+ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED  WHEN_FAILED RAW_VALUE
+  1 Raw_Read_Error_Rate     0x000f   100   253   006    Pre-fail  Always       -       0
+  3 Spin_Up_Time            0x0003   098   098   000    Pre-fail  Always       -       0
+  4 Start_Stop_Count        0x0032   100   100   020    Old_age   Always       -       19
+  5 Reallocated_Sector_Ct   0x0033   100   100   036    Pre-fail  Always       -       0
+  7 Seek_Error_Rate         0x000f   069   060   030    Pre-fail  Always       -       10295374
+  9 Power_On_Hours          0x0032   099   099   000    Old_age   Always       -       957
+ 10 Spin_Retry_Count        0x0013   100   100   097    Pre-fail  Always       -       0
+ 12 Power_Cycle_Count       0x0032   100   100   020    Old_age   Always       -       19
+187 Reported_Uncorrect      0x0032   100   100   000    Old_age   Always       -       0
+189 High_Fly_Writes         0x003a   100   100   000    Old_age   Always       -       0
+190 Airflow_Temperature_Cel 0x0022   064   050   045    Old_age   Always       -       36 (Min/Max 13/50)
+194 Temperature_Celsius     0x0022   036   050   000    Old_age   Always       -       36 (0 13 0 0)
+195 Hardware_ECC_Recovered  0x001a   067   060   000    Old_age   Always       -       214399999
+197 Current_Pending_Sector  0x0012   100   100   000    Old_age   Always       -       0
+198 Offline_Uncorrectable   0x0010   100   100   000    Old_age   Offline      -       0
+199 UDMA_CRC_Error_Count    0x003e   200   200   000    Old_age   Always       -       0
+200 Multi_Zone_Error_Rate   0x0000   100   253   000    Old_age   Offline      -       0
+202 Data_Address_Mark_Errs  0x0032   100   253   000    Old_age   Always       -       0
 
-cmp_ok( scalar( keys $smart->get_disk_attributes($disk) ), '>', 1, 'get_disk_attributes() returns hash of device attributes' );
-is( eval{$smart->get_disk_attributes('/dev/sdz')}, undef, 'get_disk_attributes() returns failure when passed invalid device' );
+SMART Error Log Version: 1
+No Errors Logged
 
-is( $smart->update_data($disk), 1, 'update_data() updated object with current device data' );
-is( eval{$smart->update_data('/dev/sdz')}, undef, 'update_data() returns falure when passed invalid device' );
+SMART Self-test log structure revision number 1
+
+SMART Selective self-test log data structure revision number 1
+ SPAN  MIN_LBA  MAX_LBA  CURRENT_TEST_STATUS
+    1        0        0  Not_testing
+    2        0        0  Not_testing
+    3        0        0  Not_testing
+    4        0        0  Not_testing
+    5        0        0  Not_testing
+Selective self-test flags (0x0):
+  After scanning selected spans, do NOT read-scan remainder of disk.
+If Selective self-test is pending on power-up, resume after 0 minute delay.';
+
+
+$ENV{'TEST_MOCK_DATA'} = 1;
+
+my $disk  = '/dev/blah_good';
+my $smart = Disk::SMART->new( $disk, $test_data );
+
+#Positive testing
+is( $smart->get_disk_temp($disk), 2, 'get_disk_temp() returns drive temperature' );
+is( $smart->get_disk_health($disk), 'PASSED', 'get_disk_health() returns health status' );
+is( $smart->get_disk_model($disk), 'ST3250410AS', 'get_disk_model() returns disk model or N/A' );
+is( $smart->get_disk_errors($disk), 'No Errors Logged', 'get_disk_errors() returns proper string' );
+is( scalar( keys $smart->get_disk_attributes($disk) ), 18, 'get_disk_attributes() returns hash of device attributes' );
+
+my $new_test_data = $test_data;
+$new_test_data =~ s/ST3250410AS//;
+is( $smart->update_data( $disk, $new_test_data ), 1, 'update_data() updated object with changed device data' );
+is( $smart->get_disk_model($disk), 'N/A', 'get_disk_model() returns N/A with changed device data' );
+
+#Negative testing
+$disk  = '/dev/blah_bad';
+like( exception { $smart->get_disk_temp($disk); },       qr/$disk not found in object/, 'get_disk_temp() returns failure when passed invalid device' );
+like( exception { $smart->get_disk_health($disk); },     qr/$disk not found in object/, 'get_disk_health() returns failure when passed invalid device' );
+like( exception { $smart->get_disk_errors($disk); },     qr/$disk not found in object/, 'get_disk_model() returns failure when passed invalid device' );
+like( exception { $smart->get_disk_errors($disk); },     qr/$disk not found in object/, 'get_disk_errors() returns failure when passed invalid device' );
+like( exception { $smart->get_disk_attributes($disk); }, qr/$disk not found in object/, 'get_disk_attributes() returns failure when passed invalid device' );
+like( exception { $smart->update_data($disk); },         qr/couldn't poll/,             'update_data() returns falure when passed invalid device' );
 

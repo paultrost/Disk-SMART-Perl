@@ -11,7 +11,8 @@ WriteMakefile(
     ABSTRACT_FROM    => 'lib/Disk/SMART.pm',
     PL_FILES         => {},
     TEST_REQUIRES    => {
-        'Test::More' => 0,
+        'Test::More'  => 0,
+        'Test::Fatal' => 0,
     },
     PREREQ_PM => {
         'Math::Round' => 0,
@@ -39,7 +40,8 @@ WriteMakefile(
             },
             test => {
                 requires => {
-                    'Test::More' => 0,
+                    'Test::More'  => 0,
+                    'Test::Fatal' => 0,
                 }
             }
         }
