@@ -179,6 +179,38 @@ sub update_data {
     return 1;
 }
 
+=head2 B<run_short_test>
+
+Runs the SMART short self test and returns the result.
+
+C<DEVICE> - Device identifier of SSD/ Hard Drive
+
+    $smart->run_short_test('/dev/sda');
+
+=cut
+
+sub run_short_test {
+    my ( $self, $device ) = @_;
+    $self->_validate_param($device);
+
+    if ( !defined $ENV{'MOCK_TEST_DATA'} ) {
+        my $out = qx( $smartctl -t short $device );
+        my ($short_test_time) = $out =~ /Please wait (.*) minutes/s;
+        sleep( $short_test_time * 60 );
+    }
+
+    my $smart_output = ( defined $ENV{'MOCK_TEST_DATA'} ) ? $ENV{'MOCK_TEST_DATA'} : qx($smartctl -a $device);
+    ($smart_output) = $smart_output =~ /(SMART Self-test log.*)\nSMART Selective self-test/s;
+    my @device_tests = split /\n/, $smart_output;
+    my $short_test_number = $device_tests[2];
+    my $short_test_status = substr $short_test_number, 25, +30;
+    $short_test_status =~ s/\s+$//g;    #trim beginning and ending whitepace
+
+    return $short_test_status;
+}
+
+##INTERNAL FUNCTIONS BELOW. THESE SHOULD NEVER BE CALLED BY A SCRIPT##
+
 sub _process_disk_attributes {
     my ( $self, $device ) = @_;
     $self->_validate_param($device);
@@ -264,7 +296,7 @@ sub _validate_param {
 
     return;
 }
-    
+
 1;
 
 __END__
