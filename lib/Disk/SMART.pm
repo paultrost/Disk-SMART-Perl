@@ -6,7 +6,7 @@ use Carp;
 use Math::Round;
 
 {
-    $Disk::SMART::VERSION = '0.06'
+    $Disk::SMART::VERSION = '0.07'
 }
 
 our $smartctl = '/usr/sbin/smartctl';
