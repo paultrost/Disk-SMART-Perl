@@ -5,7 +5,8 @@ use Test::Fatal;
 use Disk::SMART;
 use Data::Dumper;
 
-my $test_data = 
+
+$ENV{'MOCK_TEST_DATA'} =
 'smartctl 5.41 2011-06-09 r3365 [x86_64-linux-2.6.32-32-pve] (local build)
 Copyright (C) 2002-11 by Bruce Allen, http://smartmontools.sourceforge.net
 
@@ -93,11 +94,8 @@ Selective self-test flags (0x0):
   After scanning selected spans, do NOT read-scan remainder of disk.
 If Selective self-test is pending on power-up, resume after 0 minute delay.';
 
-
-$ENV{'TEST_MOCK_DATA'} = 1;
-
-my $disk  = '/dev/blah_good';
-my $smart = Disk::SMART->new( $disk, $test_data );
+my $disk  = '/dev/test_good';
+my $smart = Disk::SMART->new($disk);
 
 #Positive testing
 is( $smart->get_disk_temp($disk), 2, 'get_disk_temp() returns drive temperature' );
@@ -106,17 +104,18 @@ is( $smart->get_disk_model($disk), 'ST3250410AS', 'get_disk_model() returns disk
 is( $smart->get_disk_errors($disk), 'No Errors Logged', 'get_disk_errors() returns proper string' );
 is( scalar( keys $smart->get_disk_attributes($disk) ), 18, 'get_disk_attributes() returns hash of device attributes' );
 
-my $new_test_data = $test_data;
-$new_test_data =~ s/ST3250410AS//;
-is( $smart->update_data( $disk, $new_test_data ), 1, 'update_data() updated object with changed device data' );
+$ENV{'MOCK_TEST_DATA'} =~ s/ST3250410AS//;
+is( $smart->update_data($disk), 1, 'update_data() updated object with changed device data' );
 is( $smart->get_disk_model($disk), 'N/A', 'get_disk_model() returns N/A with changed device data' );
 
 #Negative testing
-$disk  = '/dev/blah_bad';
+$disk  = '/dev/test_bad';
 like( exception { $smart->get_disk_temp($disk); },       qr/$disk not found in object/, 'get_disk_temp() returns failure when passed invalid device' );
 like( exception { $smart->get_disk_health($disk); },     qr/$disk not found in object/, 'get_disk_health() returns failure when passed invalid device' );
 like( exception { $smart->get_disk_errors($disk); },     qr/$disk not found in object/, 'get_disk_model() returns failure when passed invalid device' );
 like( exception { $smart->get_disk_errors($disk); },     qr/$disk not found in object/, 'get_disk_errors() returns failure when passed invalid device' );
 like( exception { $smart->get_disk_attributes($disk); }, qr/$disk not found in object/, 'get_disk_attributes() returns failure when passed invalid device' );
+
+$ENV{'MOCK_TEST_DATA'} = undef;
 like( exception { $smart->update_data($disk); },         qr/couldn't poll/,             'update_data() returns falure when passed invalid device' );
 

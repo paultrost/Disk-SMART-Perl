@@ -7,8 +7,7 @@ README
 README.md
 LICENSE
 t/00-load.t
-t/01-instantiation.t
-t/02-get_functions.t
+t/01-get_functions.t
 t/manifest.t
 t/pod-coverage.t
 t/pod.t

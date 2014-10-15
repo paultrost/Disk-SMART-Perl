@@ -44,18 +44,12 @@ sub new {
     my $self = bless {}, $class;
     my $test_data;
 
-    if ( $ENV{'TEST_MOCK_DATA'} ) {
-        $test_data = pop @devices;
-    }
-    
     croak "Valid device identifier not supplied to constructor for $class.\n"
-        if !@devices && !$ENV{'TEST_MOCK_DATA'};
+        if !@devices && !defined $ENV{'TEST_MOCK_DATA'};
     croak "smartctl binary was not found on your system, are you running as root?\n"
-        if !-f $smartctl && !$ENV{'TEST_MOCK_DATA'};
+        if !-f $smartctl && !defined $ENV{'TEST_MOCK_DATA'};
 
-    foreach my $device (@devices) {
-      ($test_data) ? $self->update_data($device, $test_data) : $self->update_data($device);
-    }
+    $self->update_data($_) foreach @devices;
 
     return $self;
 }
@@ -76,6 +70,7 @@ C<DEVICE> - Device identifier of SSD/ Hard Drive
 sub get_disk_attributes {
     my ( $self, $device ) = @_;
     $self->_validate_param($device);
+
     return $self->{'devices'}->{$device}->{'attributes'};
 }
 
@@ -93,6 +88,7 @@ C<DEVICE> - Device identifier of SSD/ Hard Drive
 sub get_disk_errors {
     my ( $self, $device ) = @_;
     $self->_validate_param($device);
+
     return $self->{'devices'}->{$device}->{'errors'};
 }
 
@@ -110,6 +106,7 @@ C<DEVICE> - Device identifier of SSD / Hard Drive
 sub get_disk_health {
     my ( $self, $device ) = @_;
     $self->_validate_param($device);
+
     return $self->{'devices'}->{$device}->{'health'};
 }
 
@@ -127,6 +124,7 @@ C<DEVICE> - Device identifier of SSD / Hard Drive
 sub get_disk_model {
     my ( $self, $device ) = @_;
     $self->_validate_param($device);
+
     return $self->{'devices'}->{$device}->{'model'};
 }
 
@@ -144,6 +142,7 @@ C<DEVICE> - Device identifier of SSD / Hard Drive
 sub get_disk_temp {
     my ( $self, $device ) = @_;
     $self->_validate_param($device);
+
     return @{ $self->{'devices'}->{$device}->{'temp'} };
 }
 
@@ -159,13 +158,11 @@ C<DEVICE> - Device identifier of SSD/ Hard Drive
 =cut
 
 sub update_data {
-    my ( $self, $device, $test_data ) = @_;
-    my $out = $test_data // undef;
-
-    $out = qx($smartctl -a $device) if !defined $test_data;
+    my ( $self, $device ) = @_;
+    my $out = ( defined $ENV{'MOCK_TEST_DATA'} ) ? $ENV{'MOCK_TEST_DATA'} : qx($smartctl -a $device);
     my $retval = $?;
 
-    if ( !$test_data ) {
+    if ( !$ENV{'MOCK_TEST_DATA'} ) {
         croak "Smartctl couldn't poll device $device\n"
             if ( $out !~ /START OF INFORMATION SECTION/ );
     }
@@ -173,11 +170,6 @@ sub update_data {
     chomp($out);
     $self->{'devices'}->{$device}->{'SMART_OUTPUT'} = $out;
     
-    # update_data() can be called at any time with a device name. Let's check
-    # the device name given to make sure it matches what was given during
-    # object construction.
-    $self->_validate_param($device);
-
     $self->_process_disk_attributes($device);
     $self->_process_disk_errors($device);
     $self->_process_disk_health($device);
@@ -189,6 +181,7 @@ sub update_data {
 
 sub _process_disk_attributes {
     my ( $self, $device ) = @_;
+    $self->_validate_param($device);
 
     my $smart_output = $self->{'devices'}->{$device}->{'SMART_OUTPUT'};
     my ($smart_attributes) = $smart_output =~ /(ID# ATTRIBUTE_NAME.*)\nSMART Error/s;
@@ -267,7 +260,8 @@ sub _process_disk_temp {
 
 sub _validate_param {
     my ( $self, $device ) = @_;
-    croak "$device not found in object, you probably didn't enter it right" if ( !exists $self->{'devices'}->{$device} );
+    croak "$device not found in object. Verify you specified the right device identifier.\n" if ( !exists $self->{'devices'}->{$device} );
+
     return;
 }
     
