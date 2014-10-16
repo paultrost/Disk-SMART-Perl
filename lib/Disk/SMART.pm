@@ -158,13 +158,12 @@ C<DEVICE> - Device identifier of SSD/ Hard Drive
 
 sub update_data {
     my ( $self, $device ) = @_;
-    my $out = ( defined $ENV{'MOCK_TEST_DATA'} ) ? $ENV{'MOCK_TEST_DATA'} : qx($smartctl -a $device);
-    my $retval = $?;
 
-    if ( !$ENV{'MOCK_TEST_DATA'} ) {
-        croak "Smartctl couldn't poll device $device\n"
-            if ( $out !~ /START OF INFORMATION SECTION/ );
-    }
+    my $out;
+    $out = $ENV{'MOCK_TEST_DATA'} if ( defined $ENV{'MOCK_TEST_DATA'} );
+    $out = qx($smartctl -a $device) if -f $smartctl;
+    croak "Smartctl couldn't poll device $device\n"
+        if ( !$out || $out !~ /START OF INFORMATION SECTION/ );
 
     chomp($out);
     $self->{'devices'}->{$device}->{'SMART_OUTPUT'} = $out;
