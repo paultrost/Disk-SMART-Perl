@@ -6,18 +6,18 @@ use Carp;
 use Math::Round;
 
 {
-    $Disk::SMART::VERSION = '0.07'
+    $Disk::SMART::VERSION = '0.08'
 }
 
 our $smartctl = '/usr/sbin/smartctl';
 
 =head1 NAME
 
-Disk::SMART - Provides an interface to smartctl
+Disk::SMART - Provides an interface to smartctl to return disk stats and to run tests.
 
 =head1 SYNOPSIS
 
-Disk::SMART is an object ooriented module that provides an interface to get SMART disk info from a device as well as initiate testing.
+Disk::SMART is an object oriented module that provides an interface to get SMART disk info from a device as well as initiate testing.
     use Disk::SMART;
 
     my $smart = Disk::SMART->new('/dev/sda');
@@ -42,12 +42,11 @@ Returns C<Disk::SMART> object if smartctl is available and can poll the given de
 sub new {
     my ( $class, @devices ) = @_;
     my $self = bless {}, $class;
-    my $test_data;
 
     croak "Valid device identifier not supplied to constructor for $class.\n"
-        if !@devices && !defined $ENV{'TEST_MOCK_DATA'};
+        if !@devices && !defined $ENV{'MOCK_TEST_DATA'};
     croak "smartctl binary was not found on your system, are you running as root?\n"
-        if !-f $smartctl && !defined $ENV{'TEST_MOCK_DATA'};
+        if !-f $smartctl && !defined $ENV{'MOCK_TEST_DATA'};
 
     $self->update_data($_) foreach @devices;
 
@@ -201,7 +200,7 @@ sub run_short_test {
 
     my $smart_output = ( defined $ENV{'MOCK_TEST_DATA'} ) ? $ENV{'MOCK_TEST_DATA'} : qx($smartctl -a $device);
     ($smart_output) = $smart_output =~ /(SMART Self-test log.*)\nSMART Selective self-test/s;
-    my @device_tests = split /\n/, $smart_output;
+    my @device_tests      = split /\n/, $smart_output;
     my $short_test_number = $device_tests[2];
     my $short_test_status = substr $short_test_number, 25, +30;
     $short_test_status =~ s/\s+$//g;    #trim beginning and ending whitepace
@@ -250,7 +249,7 @@ sub _process_disk_health {
     my $smart_output = $self->{'devices'}->{$device}->{'SMART_OUTPUT'};
     my ($health) = $smart_output =~ /SMART overall-health self-assessment test result:(.*)\n/;
     $health =~ s/^\s+|\s+$//g;    #trim beginning and ending whitepace
-    $health = 'N/A' if !$health or $health !~ /PASSED|FAILED/x;
+    $health = 'N/A' if !$health || $health !~ /PASSED|FAILED/x;
 
     return $self->{'devices'}->{$device}->{'health'} = $health;
 }

@@ -1,10 +1,12 @@
 Revision history for Disk-SMART
 
-        
+0.08    2014-10-16 
+        Corrected test data var name in new();        
 
-0.07    2014-10-13
+0.07    2014-10-15
         Implemented dummy testing in unit tests to bypass the need for smokers having smartctl installed
         Regex and function cleanups
+        Added run_short_test() to run the SMART short self test and unit tests for it
 
 0.06    2014-10-09
         Fixed issue with N/A disk temp not returning correctly and causing failure
