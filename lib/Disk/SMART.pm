@@ -6,10 +6,11 @@ use Carp;
 use Math::Round;
 
 {
-    $Disk::SMART::VERSION = '0.08'
+    $Disk::SMART::VERSION = '0.09'
 }
 
-our $smartctl = '/usr/sbin/smartctl';
+our $smartctl = qx(which smartctl);
+chomp($smartctl);
 
 =head1 NAME
 
@@ -160,8 +161,8 @@ sub update_data {
     my ( $self, $device ) = @_;
 
     my $out;
-    $out = $ENV{'MOCK_TEST_DATA'} if ( defined $ENV{'MOCK_TEST_DATA'} );
-    $out = qx($smartctl -a $device) if -f $smartctl;
+    $out = $ENV{'MOCK_TEST_DATA'}   if defined $ENV{'MOCK_TEST_DATA'};
+    $out = qx($smartctl -a $device) if ( !defined $ENV{'MOCK_TEST_DATA'} && -f $smartctl );
     croak "Smartctl couldn't poll device $device\n"
         if ( !$out || $out !~ /START OF INFORMATION SECTION/ );
 
@@ -298,6 +299,10 @@ sub _validate_param {
 1;
 
 __END__
+
+=head1 COMPATIBILITY
+
+  This module should run on any UNIX like OS with Perl 5.10+ and has the smartctl progam installed from the smartmontools package.
 
 =head1 AUTHOR
 
