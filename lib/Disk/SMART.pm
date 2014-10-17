@@ -272,7 +272,7 @@ sub _process_disk_temp {
     my ( $temp_c, $temp_f );
 
     my $smart_output = $self->{'devices'}->{$device}->{'SMART_OUTPUT'};
-    ($temp_c) = $smart_output =~ /(Temperature_Celsius.*\n)/;
+    ($temp_c) = $smart_output =~ /(Temperature_Celsius.*\n|Airflow_Temperature_Cel.*\n)/;
 
     if ($temp_c) {
         $temp_c = substr $temp_c, 83, +3;
