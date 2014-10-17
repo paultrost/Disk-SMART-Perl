@@ -1,5 +1,10 @@
 Revision history for Disk-SMART
 
+0.09    2014-10-17 
+        Minor changes to get unit tests to pass on smokers
+        Added testing of env parameter for smartctl path, which will enable multi OS support
+        Added COMPATABILITY pod section
+
 0.08    2014-10-16 
         Corrected test data var name in new();        
 

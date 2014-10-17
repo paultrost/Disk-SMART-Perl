@@ -291,7 +291,8 @@ sub _process_disk_temp {
 
 sub _validate_param {
     my ( $self, $device ) = @_;
-    croak "$device not found in object. Verify you specified the right device identifier.\n" if ( !exists $self->{'devices'}->{$device} );
+    croak "$device not found in object. Verify you specified the right device identifier.\n"
+        if ( !exists $self->{'devices'}->{$device} );
 
     return;
 }
@@ -302,7 +303,7 @@ __END__
 
 =head1 COMPATIBILITY
 
-  This module should run on any UNIX like OS with Perl 5.10+ and has the smartctl progam installed from the smartmontools package.
+  This module should run on any UNIX like OS with Perl 5.10+ and the smartctl progam installed from the smartmontools package.
 
 =head1 AUTHOR
 
