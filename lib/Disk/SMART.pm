@@ -6,7 +6,7 @@ use Carp;
 use Math::Round;
 
 {
-    $Disk::SMART::VERSION = '0.09'
+    $Disk::SMART::VERSION = '0.10'
 }
 
 our $smartctl = qx(which smartctl);
@@ -71,7 +71,7 @@ sub get_disk_attributes {
     my ( $self, $device ) = @_;
     $self->_validate_param($device);
 
-    return $self->{'devices'}->{$device}->{'attributes'};
+    return %{ $self->{'devices'}->{$device}->{'attributes'} };
 }
 
 

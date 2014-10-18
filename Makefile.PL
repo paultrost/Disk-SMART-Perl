@@ -10,9 +10,11 @@ WriteMakefile(
     MIN_PERL_VERSION => '5.010',
     ABSTRACT_FROM    => 'lib/Disk/SMART.pm',
     PL_FILES         => {},
-    TEST_REQUIRES    => {
-        'Test::More'  => 0,
-        'Test::Fatal' => 0,
+    TEST_REQUIRES => {
+        'Test::More'          => 0,
+        'Test::Fatal'         => 0,
+        'Test::Pod'           => 0,
+        'Test::Pod::Coverage' => 0,
     },
     PREREQ_PM => {
         'Math::Round' => 0,
@@ -40,8 +42,10 @@ WriteMakefile(
             },
             test => {
                 requires => {
-                    'Test::More'  => 0,
-                    'Test::Fatal' => 0,
+                    'Test::More'          => 0,
+                    'Test::Fatal'         => 0,
+                    'Test::Pod'           => 0,
+                    'Test::Pod::Coverage' => 0,
                 }
             }
         }

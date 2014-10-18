@@ -108,7 +108,9 @@ is( $smart->get_disk_temp($disk), 2, 'get_disk_temp() returns device temperature
 is( $smart->get_disk_health($disk), 'PASSED', 'get_disk_health() returns health status' );
 is( $smart->get_disk_model($disk), 'ST3250410AS', 'get_disk_model() returns device model' );
 is( $smart->get_disk_errors($disk), 'No Errors Logged', 'get_disk_errors() returns proper string' );
-is( scalar( keys $smart->get_disk_attributes($disk) ), 18, 'get_disk_attributes() returns hash of device attributes' );
+
+my %attribs = $smart->get_disk_attributes($disk);
+is( keys %attribs, 18, 'get_disk_attributes() returns hash of device attributes' );
 is( $smart->run_short_test($disk), 'Completed without error', 'run_short_test() returns proper string' );
 
 $ENV{'MOCK_TEST_DATA'} =~ s/ST3250410AS//;
