@@ -1,5 +1,8 @@
 Revision history for Disk-SMART
 
+0.11	2014
+	Updated POD for update_data() and run_short_test()
+
 0.10	2014-10-18
 	Updated regex to get disk temperature to look for two different lines that could contain temp
 	Corrected get_disk_attributes() to return hash correctly on Perl < 5.14

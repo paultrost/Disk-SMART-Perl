@@ -147,7 +147,7 @@ sub get_disk_temp {
 }
 
 
-=head2 B<update_data>
+=head2 B<update_data(DEVICE)>
 
 Updates the SMART output and attributes of a device. Returns undef.
 
@@ -178,7 +178,7 @@ sub update_data {
     return 1;
 }
 
-=head2 B<run_short_test>
+=head2 B<run_short_test(DEVICE)>
 
 Runs the SMART short self test and returns the result.
 
