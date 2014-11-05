@@ -19,9 +19,12 @@ Disk::SMART - Provides an interface to smartctl to return disk stats and to run 
 =head1 SYNOPSIS
 
 Disk::SMART is an object oriented module that provides an interface to get SMART disk info from a device as well as initiate testing.
+
     use Disk::SMART;
 
-    my $smart = Disk::SMART->new('/dev/sda');
+    my $smart = Disk::SMART->new('/dev/sda', '/dev/sdb');
+
+    my $disk_health = $smart->get_disk_health('/dev/sda');
 
 =cut
 
