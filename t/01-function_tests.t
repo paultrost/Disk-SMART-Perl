@@ -114,7 +114,7 @@ is( keys %attribs, 18, 'get_disk_attributes() returns hash of device attributes'
 is( $smart->run_short_test($disk), 'Completed without error', 'run_short_test() returns proper string' );
 
 $ENV{'MOCK_TEST_DATA'} =~ s/ST3250410AS//;
-is( $smart->update_data($disk), 1, 'update_data() updated object with changed device data' );
+is( $smart->update_data($disk), undef, 'update_data() updated object with changed device data' );
 is( $smart->get_disk_model($disk), 'N/A', 'get_disk_model() returns N/A with changed device data' );
 
 #Negative testing
