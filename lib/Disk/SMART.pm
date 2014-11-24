@@ -97,7 +97,24 @@ sub get_disk_errors {
 
 =head2 B<get_disk_health(DEVICE)>
 
-Returns the health of the disk. Output is "PASSED", "FAILED", or "N/A".
+Returns the health of the disk. Output is "PASSED", "FAILED", or "N/A". If the device has positive values for the attributes listed below then the status will output that information.
+
+Eg. "FAILED - Reported_Uncorrectable_Errors = 1"
+
+The attributes are:
+
+5 - Reallocated_Sector_Count
+
+187 - Reported_Uncorrectable_Errors
+
+188 - Command_Timeout
+
+197 - Current_Pending_Sector_Count
+
+198 - Offline_Uncorrectable
+
+If Reported_Uncorrectable_Errors is greater than 0 then the drive should be replaced immediately. This list is taken from a study shown at https://www.backblaze.com/blog/hard-drive-smart-stats/
+
 
 C<DEVICE> - Device identifier of SSD / Hard Drive
 
@@ -109,7 +126,17 @@ sub get_disk_health {
     my ( $self, $device ) = @_;
     $self->_validate_param($device);
 
-    return $self->{'devices'}->{$device}->{'health'};
+    my $status = $self->{'devices'}->{$device}->{'health'};
+
+    my %failure_attribute_hash;
+    while ( my ($key, $value) = each %{ $self->{'devices'}->{$device}->{'attributes'} } ) {
+        if ( $key =~ /\A5\Z|\A187\Z|\A188\Z|\A197\Z|\A198\Z/ ) {
+            $failure_attribute_hash{$key} = $value;
+            $status .= ": $key - $value->[0] = $value->[1]" if ( $value->[1] > 0 );
+        }
+    }
+
+    return $status;
 }
 
 
@@ -219,14 +246,16 @@ sub _process_disk_attributes {
     my $smart_output = $self->{'devices'}->{$device}->{'SMART_OUTPUT'};
     my ($smart_attributes) = $smart_output =~ /(ID# ATTRIBUTE_NAME.*)\nSMART Error/s;
     my @attributes = split /\n/, $smart_attributes;
-    shift @attributes;
+    shift @attributes; #remove table header
 
     foreach my $attribute (@attributes) {
+        my $id    = substr $attribute, 0,  +3;
         my $name  = substr $attribute, 4,  +24;
         my $value = substr $attribute, 83, +50;
+        $id    = _trim($id);
         $name  = _trim($name);
         $value = _trim($value);
-        $self->{'devices'}->{$device}->{'attributes'}->{$name} = $value;
+        $self->{'devices'}->{$device}->{'attributes'}->{$id} = [ $name, $value ];
     }
 
     return;
@@ -306,6 +335,7 @@ sub _validate_param {
 }
 
 1;
+
 
 __END__
 

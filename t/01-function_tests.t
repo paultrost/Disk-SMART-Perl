@@ -1,6 +1,6 @@
 use warnings;
 use strict;
-use Test::More 'tests' => 15;
+use Test::More 'tests' => 17;
 use Test::Fatal;
 use Disk::SMART;
 
@@ -114,8 +114,11 @@ is( keys %attribs, 18, 'get_disk_attributes() returns hash of device attributes'
 is( $smart->run_short_test($disk), 'Completed without error', 'run_short_test() returns proper string' );
 
 $ENV{'MOCK_TEST_DATA'} =~ s/ST3250410AS//;
+$ENV{'MOCK_TEST_DATA'} =~ s/187 Reported_Uncorrect      0x0032   100   100   000    Old_age   Always       -       0/187 Reported_Uncorrect      0x0032   100   100   000    Old_age   Always       -       1/;
 is( $smart->update_data($disk), undef, 'update_data() updated object with changed device data' );
 is( $smart->get_disk_model($disk), 'N/A', 'get_disk_model() returns N/A with changed device data' );
+is( $smart->get_disk_temp($disk), 2, 'get_disk_temp() returns device temperature' );
+is( $smart->get_disk_health($disk), 'PASSED: 187 - Reported_Uncorrect = 1', 'get_disk_health() returns failed attribute status when SMART attribute 187 > 0' );
 
 #Negative testing
 $disk  = '/dev/test_bad';

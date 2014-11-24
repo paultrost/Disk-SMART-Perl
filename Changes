@@ -1,7 +1,9 @@
 Revision history for Disk-SMART
 
-0.11	2014
-	Updated POD for update_data() and run_short_test()
+0.11	2014-11-24
+	Updated POD
+	Code cleanup.
+	Added extended output to get_disk_health() that will report any values > 1 from specific attributes that show impending drive failure
 
 0.10	2014-10-18
 	Updated regex to get disk temperature to look for two different lines that could contain temp
