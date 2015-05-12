@@ -4,12 +4,13 @@ use warnings;
 use strict;
 use Carp;
 use Math::Round;
+use File::Which;
 
 {
-    $Disk::SMART::VERSION = '0.11'
+    $Disk::SMART::VERSION = '0.12'
 }
 
-chomp( our $smartctl = qx(which smartctl) );
+our $smartctl = which('smartctl');
 
 =head1 NAME
 
@@ -34,24 +35,27 @@ Disk::SMART is an object oriented module that provides an interface to get SMART
 
 Instantiates the Disk::SMART object
 
-C<DEVICE> - Device identifier of SSD / Hard Drive. The constructor takes either a single device name, or an array of device names.
+C<DEVICE> - Device identifier of a single SSD / Hard Drive, or a list. If no devices are supplied then it runs get_disk_list() which will return an array of detected sdX and hdX devices.
 
-    my $smart = Disk::SMART->new( 'dev/sda', '/dev/sdb' );
+    my $smart = Disk::SMART->new();
+    my $smart = Disk::SMART->new( '/dev/sda', '/dev/sdb' );
+    my @disks = $smart->get_disk_list();
 
 Returns C<Disk::SMART> object if smartctl is available and can poll the given device(s).
 
 =cut
 
 sub new {
-    my ( $class, @devices ) = @_;
+    my ( $class, @p_devices ) = @_;
     my $self = bless {}, $class;
+    my @devices = @p_devices ? @p_devices : $self->get_disk_list();
 
     croak "Valid device identifier not supplied to constructor for $class.\n"
         if !@devices && !defined $ENV{'MOCK_TEST_DATA'};
     croak "smartctl binary was not found on your system, are you running as root?\n"
         if !-f $smartctl && !defined $ENV{'MOCK_TEST_DATA'};
 
-    $self->update_data($_) foreach @devices;
+    $self->update_data(@devices);
 
     return $self;
 }
@@ -63,7 +67,7 @@ sub new {
 
 Returns hash of the SMART disk attributes and values
 
-C<DEVICE> - Device identifier of SSD/ Hard Drive
+C<DEVICE> - Device identifier of a single SSD / Hard Drive
 
     my %disk_attributes = $smart->get_disk_attributes('/dev/sda');
 
@@ -81,7 +85,7 @@ sub get_disk_attributes {
 
 Returns scalar of any listed errors
 
-C<DEVICE> - Device identifier of SSD/ Hard Drive
+C<DEVICE> - Device identifier of a single SSD/ Hard Drive
 
     my $disk_errors = $smart->get_disk_errors('/dev/sda');
 
@@ -116,7 +120,7 @@ The attributes are:
 If Reported_Uncorrectable_Errors is greater than 0 then the drive should be replaced immediately. This list is taken from a study shown at https://www.backblaze.com/blog/hard-drive-smart-stats/
 
 
-C<DEVICE> - Device identifier of SSD / Hard Drive
+C<DEVICE> - Device identifier of a single SSD / Hard Drive
 
     my $disk_health = $smart->get_disk_health('/dev/sda');
 
@@ -144,7 +148,7 @@ sub get_disk_health {
 
 Returns the model of the device. eg. "ST3250410AS".
 
-C<DEVICE> - Device identifier of SSD / Hard Drive
+C<DEVICE> - Device identifier of a single SSD / Hard Drive
 
     my $disk_model = $smart->get_disk_model('/dev/sda');
 
@@ -162,7 +166,7 @@ sub get_disk_model {
 
 Returns an array with the temperature of the device in Celsius and Farenheit, or N/A.
 
-C<DEVICE> - Device identifier of SSD / Hard Drive
+C<DEVICE> - Device identifier of a single SSD / Hard Drive
 
     my ($temp_c, $temp_f) = $smart->get_disk_temp('/dev/sda');
 
@@ -178,31 +182,35 @@ sub get_disk_temp {
 
 =head2 B<update_data(DEVICE)>
 
-Updates the SMART output and attributes of a device. Returns undef.
+Updates the SMART output and attributes for each device. Returns undef.
 
-C<DEVICE> - Device identifier of SSD Hard Drive
+C<DEVICE> - Device identifier of a single SSD / Hard Drive or a list of devices. If none are specified then get_disk_list() is called to detect devices.
 
     $smart->update_data('/dev/sda');
 
 =cut
 
 sub update_data {
-    my ( $self, $device ) = @_;
+    my ( $self, @p_devices ) = @_;
+    my @devices = @p_devices ? @p_devices : $self->get_disk_list();
 
-    my $out;
-    $out = $ENV{'MOCK_TEST_DATA'}   if defined $ENV{'MOCK_TEST_DATA'};
-    $out = qx($smartctl -a $device) if ( !defined $ENV{'MOCK_TEST_DATA'} && -f $smartctl );
-    croak "Smartctl couldn't poll device $device\n"
-        if ( !$out || $out !~ /START OF INFORMATION SECTION/ );
+    foreach my $device (@devices) {
+        my $out;
+        $out = $ENV{'MOCK_TEST_DATA'} if defined $ENV{'MOCK_TEST_DATA'};
+        $out = qx($smartctl -a $device -d sat)
+          if ( !defined $ENV{'MOCK_TEST_DATA'} && -f $smartctl );
+        confess "Smartctl couldn't poll device $device\n"
+          if ( !$out || $out !~ /START OF INFORMATION SECTION/ );
 
-    chomp($out);
-    $self->{'devices'}->{$device}->{'SMART_OUTPUT'} = $out;
-    
-    $self->_process_disk_attributes($device);
-    $self->_process_disk_errors($device);
-    $self->_process_disk_health($device);
-    $self->_process_disk_model($device);
-    $self->_process_disk_temp($device);
+        chomp($out);
+        $self->{'devices'}->{$device}->{'SMART_OUTPUT'} = $out;
+
+        $self->_process_disk_attributes($device);
+        $self->_process_disk_errors($device);
+        $self->_process_disk_health($device);
+        $self->_process_disk_model($device);
+        $self->_process_disk_temp($device);
+    }
 
     return;
 }
@@ -237,7 +245,20 @@ sub run_short_test {
     return $short_test_status;
 }
 
-##INTERNAL FUNCTIONS BELOW. THESE SHOULD NEVER BE CALLED BY A SCRIPT##
+=head2 B<get_disk_list>
+
+Returns list of detected hda and sda devices. This method can be called manually if unsure what devices are present. 
+
+    $smart->get_disk_list;
+
+=cut
+
+sub get_disk_list {
+    open my $raw_out, '-|', 'parted -l';
+    local $/ = undef;
+    my @disks = map { /Disk (\/.*\/[h|s]d[a-z]):/ } split /\n/, <$raw_out>;
+    return @disks;
+}
 
 sub _process_disk_attributes {
     my ( $self, $device ) = @_;
@@ -309,6 +330,7 @@ sub _process_disk_temp {
         $temp_c = substr $temp_c, 83, +3;
         $temp_c = _trim($temp_c);
         $temp_f = round( ( $temp_c * 9 ) / 5 + 32 );
+
         $temp_c = int $temp_c;
         $temp_f = int $temp_f;
     }
@@ -349,7 +371,7 @@ __END__
 
 =head1 LICENSE AND COPYRIGHT
 
- Copyright 2014 by Paul Trost
+ Copyright 2015 by Paul Trost
  This script is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License v2, or at your option any later version.
  <http://gnu.org/licenses/gpl.html>
 

@@ -1,5 +1,11 @@
 Revision history for Disk-SMART
 
+0.12	2015-05-02
+	Added get_disk_list() to detect sdX and hdX devices
+	Changed new() to use get_disk_list() if no device list is passed to it
+	Changed shell call to 'which' to use File::Which
+	Changed update_data() to take a list of devices
+
 0.11	2014-11-24
 	Updated POD
 	Code cleanup.

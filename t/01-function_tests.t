@@ -1,6 +1,6 @@
 use warnings;
 use strict;
-use Test::More 'tests' => 17;
+use Test::More 'tests' => 18;
 use Test::Fatal;
 use Disk::SMART;
 
@@ -101,8 +101,9 @@ Selective self-test flags (0x0):
 If Selective self-test is pending on power-up, resume after 0 minute delay.';
 
 my $disk  = '/dev/test_good';
-my $smart = Disk::SMART->new($disk);
+isa_ok ( Disk::SMART->new($disk), 'Disk::SMART', 'Constructor returns new object' );
 
+my $smart = Disk::SMART->new($disk);
 #Positive testing
 is( $smart->get_disk_temp($disk), 2, 'get_disk_temp() returns device temperature' );
 is( $smart->get_disk_health($disk), 'PASSED', 'get_disk_health() returns health status' );

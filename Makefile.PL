@@ -38,6 +38,7 @@ WriteMakefile(
                     'perl'        => '5.010',
                     'Carp'        => 0,
                     'Math::Round' => 0,
+                    'File::Which' => 0,
                 }
             },
             test => {
