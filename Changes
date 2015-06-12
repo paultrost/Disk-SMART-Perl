@@ -1,6 +1,6 @@
 Revision history for Disk-SMART
 
-0.13	2015-06-11
+0.13	2015-06-12
 	Removed bad mocking code from module and unit tests and refactored to use Test::MockModule
 	Refactored getting smart output into subroutine
 
