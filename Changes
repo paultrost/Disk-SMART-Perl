@@ -1,5 +1,9 @@
 Revision history for Disk-SMART
 
+0.13	2015-06-11
+	Removed bad mocking code from module and unit tests and refactored to use Test::MockModule
+	Refactored getting smart output into subroutine
+
 0.12	2015-05-02
 	Added get_disk_list() to detect sdX and hdX devices
 	Changed new() to use get_disk_list() if no device list is passed to it

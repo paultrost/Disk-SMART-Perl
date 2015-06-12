@@ -2,12 +2,13 @@ package Disk::SMART;
 
 use warnings;
 use strict;
+use 5.010;
 use Carp;
 use Math::Round;
 use File::Which;
 
 {
-    $Disk::SMART::VERSION = '0.12'
+    $Disk::SMART::VERSION = '0.13'
 }
 
 our $smartctl = which('smartctl');
@@ -46,14 +47,14 @@ Returns C<Disk::SMART> object if smartctl is available and can poll the given de
 =cut
 
 sub new {
-    my ( $class, @p_devices ) = @_;
+    my ( $class, @devices ) = @_;
     my $self = bless {}, $class;
-    my @devices = @p_devices ? @p_devices : $self->get_disk_list();
+    @devices = @devices ? @devices : $self->get_disk_list();
 
     croak "Valid device identifier not supplied to constructor for $class.\n"
-        if !@devices && !defined $ENV{'MOCK_TEST_DATA'};
+        if !@devices;
     croak "smartctl binary was not found on your system, are you running as root?\n"
-        if !-f $smartctl && !defined $ENV{'MOCK_TEST_DATA'};
+        if !-f $smartctl;
 
     $self->update_data(@devices);
 
@@ -144,6 +145,22 @@ sub get_disk_health {
 }
 
 
+=head2 B<get_disk_list>
+
+Returns list of detected hda and sda devices. This method can be called manually if unsure what devices are present. 
+
+    $smart->get_disk_list;
+
+=cut
+    
+sub get_disk_list {
+    open my $fh, '-|', 'parted -l' or confess "Can't run parted binary\n";
+    local $/ = undef;
+    my @disks = map { /Disk (\/.*\/[h|s]d[a-z]):/ } split /\n/, <$fh>;
+    close $fh or confess "Can't close file handle reading parted output\n";
+    return @disks;
+}
+
 =head2 B<get_disk_model(DEVICE)>
 
 Returns the model of the device. eg. "ST3250410AS".
@@ -160,7 +177,6 @@ sub get_disk_model {
 
     return $self->{'devices'}->{$device}->{'model'};
 }
-
 
 =head2 B<get_disk_temp(DEVICE)>
 
@@ -179,6 +195,33 @@ sub get_disk_temp {
     return @{ $self->{'devices'}->{$device}->{'temp'} };
 }
 
+=head2 B<run_short_test(DEVICE)>
+
+Runs the SMART short self test and returns the result.
+
+C<DEVICE> - Device identifier of SSD/ Hard Drive
+
+    $smart->run_short_test('/dev/sda');
+
+=cut
+
+sub run_short_test {
+    my ( $self, $device ) = @_;
+    $self->_validate_param($device);
+
+    my $test_out = get_smart_output( $device, '-t short' );
+    my ($short_test_time) = $test_out =~ /Please wait (.*) minutes/s;
+    sleep( $short_test_time * 60 );
+
+    my $smart_output = _get_smart_output( $device, '-a' );
+    ($smart_output) = $smart_output =~ /(SMART Self-test log.*)\nSMART Selective self-test/s;
+    my @device_tests      = split /\n/, $smart_output;
+    my $short_test_number = $device_tests[2];
+    my $short_test_status = substr $short_test_number, 25, +30;
+    $short_test_status = _trim($short_test_status);
+
+    return $short_test_status;
+}
 
 =head2 B<update_data(DEVICE)>
 
@@ -196,10 +239,8 @@ sub update_data {
 
     foreach my $device (@devices) {
         my $out;
-        $out = $ENV{'MOCK_TEST_DATA'} if defined $ENV{'MOCK_TEST_DATA'};
-        $out = qx($smartctl -a $device -d sat)
-          if ( !defined $ENV{'MOCK_TEST_DATA'} && -f $smartctl );
-        confess "Smartctl couldn't poll device $device\n"
+        $out = _get_smart_output( $device, '-a' );
+        confess "Smartctl couldn't poll device $device\nSmartctl Output:\n$out\n"
           if ( !$out || $out !~ /START OF INFORMATION SECTION/ );
 
         chomp($out);
@@ -215,49 +256,19 @@ sub update_data {
     return;
 }
 
-=head2 B<run_short_test(DEVICE)>
-
-Runs the SMART short self test and returns the result.
-
-C<DEVICE> - Device identifier of SSD/ Hard Drive
-
-    $smart->run_short_test('/dev/sda');
-
-=cut
-
-sub run_short_test {
-    my ( $self, $device ) = @_;
-    $self->_validate_param($device);
-
-    if ( !defined $ENV{'MOCK_TEST_DATA'} ) {
-        my $out = qx( $smartctl -t short $device );
-        my ($short_test_time) = $out =~ /Please wait (.*) minutes/s;
-        sleep( $short_test_time * 60 );
-    }
-
-    my $smart_output = $ENV{'MOCK_TEST_DATA'} // qx($smartctl -a $device);
-    ($smart_output) = $smart_output =~ /(SMART Self-test log.*)\nSMART Selective self-test/s;
-    my @device_tests      = split /\n/, $smart_output;
-    my $short_test_number = $device_tests[2];
-    my $short_test_status = substr $short_test_number, 25, +30;
-    $short_test_status = _trim($short_test_status);
-
-    return $short_test_status;
-}
-
-=head2 B<get_disk_list>
-
-Returns list of detected hda and sda devices. This method can be called manually if unsure what devices are present. 
-
-    $smart->get_disk_list;
-
-=cut
-
-sub get_disk_list {
-    open my $raw_out, '-|', 'parted -l';
+sub _get_smart_output {
+    my ( $device, $options ) = @_;
+    $options = $options // '';
+    open my $fh, '-|', "$smartctl $device $options" or confess "Can't run smartctl binary\n";
     local $/ = undef;
-    my @disks = map { /Disk (\/.*\/[h|s]d[a-z]):/ } split /\n/, <$raw_out>;
-    return @disks;
+    my $smart_output = <$fh>;
+    #close $fh or confess "Can't close file handle reading smartctl output\n";
+    if ( $smart_output =~ /Unknown USB bridge/ ) {
+        open $fh, '-|', "$smartctl $device $options -d sat" or confess "Can't run smartctl binary\n";
+        $smart_output = <$fh>;
+        close $fh or confess "Can't close file handle reading smartctl output\n";
+    }
+    return $smart_output;
 }
 
 sub _process_disk_attributes {

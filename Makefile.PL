@@ -15,6 +15,7 @@ WriteMakefile(
         'Test::Fatal'         => 0,
         'Test::Pod'           => 0,
         'Test::Pod::Coverage' => 0,
+        'Test::MockModule'    => 0,
     },
     PREREQ_PM => {
         'Math::Round' => 0,
@@ -47,6 +48,7 @@ WriteMakefile(
                     'Test::Fatal'         => 0,
                     'Test::Pod'           => 0,
                     'Test::Pod::Coverage' => 0,
+                    'Test::MockModule'    => 0,
                 }
             }
         }
