@@ -1,5 +1,8 @@
 Revision history for Disk-SMART
 
+0.14	2015-06-14
+	Fixed to run unit tests without smartctl binary being installed
+
 0.13	2015-06-12
 	Removed bad mocking code from module and unit tests and refactored to use Test::MockModule
 	Refactored getting smart output into subroutine

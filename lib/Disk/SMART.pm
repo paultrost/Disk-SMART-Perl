@@ -8,7 +8,7 @@ use Math::Round;
 use File::Which;
 
 {
-    $Disk::SMART::VERSION = '0.13'
+    $Disk::SMART::VERSION = '0.14'
 }
 
 our $smartctl = which('smartctl');
@@ -53,8 +53,6 @@ sub new {
 
     croak "Valid device identifier not supplied to constructor for $class.\n"
         if !@devices;
-    croak "smartctl binary was not found on your system, are you running as root?\n"
-        if !-f $smartctl;
 
     $self->update_data(@devices);
 
@@ -259,14 +257,17 @@ sub update_data {
 sub _get_smart_output {
     my ( $device, $options ) = @_;
     $options = $options // '';
+
+    die "smartctl binary was not found on your system, are you running as root?\n"
+        if ( !defined $smartctl || !-f $smartctl );
+
     open my $fh, '-|', "$smartctl $device $options" or confess "Can't run smartctl binary\n";
     local $/ = undef;
     my $smart_output = <$fh>;
-    #close $fh or confess "Can't close file handle reading smartctl output\n";
+
     if ( $smart_output =~ /Unknown USB bridge/ ) {
         open $fh, '-|', "$smartctl $device $options -d sat" or confess "Can't run smartctl binary\n";
         $smart_output = <$fh>;
-        close $fh or confess "Can't close file handle reading smartctl output\n";
     }
     return $smart_output;
 }
