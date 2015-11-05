@@ -8,7 +8,7 @@ use Math::Round;
 use File::Which;
 
 {
-    $Disk::SMART::VERSION = '0.14'
+    $Disk::SMART::VERSION = '0.15'
 }
 
 our $smartctl = which('smartctl');
@@ -49,9 +49,9 @@ Returns C<Disk::SMART> object if smartctl is available and can poll the given de
 sub new {
     my ( $class, @devices ) = @_;
     my $self = bless {}, $class;
+    die "$class must be called as root, please run $0 as root or with sudo\n" if $>;
     @devices = @devices ? @devices : $self->get_disk_list();
-
-    croak "Valid device identifier not supplied to constructor for $class.\n"
+    confess "Valid device identifier not supplied to constructor, or no disks detected.\n"
         if !@devices;
 
     $self->update_data(@devices);
@@ -342,7 +342,6 @@ sub _process_disk_temp {
         $temp_c = substr $temp_c, 83, +3;
         $temp_c = _trim($temp_c);
         $temp_f = round( ( $temp_c * 9 ) / 5 + 32 );
-
         $temp_c = int $temp_c;
         $temp_f = int $temp_f;
     }

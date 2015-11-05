@@ -1,5 +1,8 @@
 Revision history for Disk-SMART
 
+0.15	2016-11-05
+	Added check for root as the executing user, updated unit tests
+
 0.14	2015-06-14
 	Fixed to run unit tests without smartctl binary being installed
 

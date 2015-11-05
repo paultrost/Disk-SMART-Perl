@@ -92,16 +92,22 @@ SMART Selective self-test log data structure revision number 1
     3        0        0  Not_testing
     4        0        0  Not_testing
     5        0        0  Not_testing
-elsius
+Selective self-test flags (0x0):
   After scanning selected spans, do NOT read-scan remainder of disk.
 If Selective self-test is pending on power-up, resume after 0 minute delay.";
 
 my $mock  = Test::MockModule->new('Disk::SMART');
 $mock->mock(
+    'new' => sub {
+        my ( $class, @devices ) = @_;
+        my $self = bless {}, $class;
+        $self->update_data(@devices);
+        return $self;
+    },
     '_get_smart_output' => sub { return $smart_output; },
     'run_short_test'    => 'Completed without error'
 );
-my $disk  = '/dev/sda';
+my $disk = '/dev/sda';    # this is being mocked
 my $smart = Disk::SMART->new($disk);
             
 # Verify functions return correctly with SMART data present
@@ -125,9 +131,9 @@ my @disk_temps = $smart->get_disk_temp($disk);
 is( $disk_temps[0], 'N/A', "get_disk_temp() returns 'N/A' when smartctl doesn't report temperaure" );
 
 #Exception testing
-$disk  = '/dev/test_bad';
+$disk = '/dev/test_bad';
 $mock->mock( 
-    'update_data'       => "Smartctl couldn't poll device",
+    'update_data' => "Smartctl couldn't poll device",
 );
 $mock->unmock('run_short_test');
 
