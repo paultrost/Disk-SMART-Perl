@@ -8,7 +8,7 @@ use Math::Round;
 use File::Which;
 
 {
-    $Disk::SMART::VERSION = '0.15.1'
+    $Disk::SMART::VERSION = '0.16'
 }
 
 our $smartctl = which('smartctl');
