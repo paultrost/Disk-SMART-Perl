@@ -1,0 +1,7 @@
+dist
+.git
+MANIFEST.SKIP
+.old
+.bak
+blib
+.tar.gz
