@@ -5,3 +5,4 @@ MANIFEST.SKIP
 .bak
 blib
 .tar.gz
+MYMETA.*
