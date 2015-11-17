@@ -8,7 +8,7 @@ use Math::Round;
 use File::Which;
 
 {
-    $Disk::SMART::VERSION = '0.17'
+    $Disk::SMART::VERSION = '0.18'
 }
 
 our $smartctl = which('smartctl');
@@ -19,7 +19,7 @@ Disk::SMART - Provides an interface to smartctl to return disk stats and to run 
 
 =head1 SYNOPSIS
 
-Disk::SMART is an object oriented module that provides an interface to get SMART disk info from a device as well as initiate testing.
+Disk::SMART is an object oriented module that provides an interface to get SMART disk info from a device as well as initiate testing. An exmple script using this module can be found at https://github.com/paultrost/linux-geek/blob/master/sysinfo.pl
 
     use Disk::SMART;
 

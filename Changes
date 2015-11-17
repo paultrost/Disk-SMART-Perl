@@ -1,5 +1,9 @@
 Revision history for Disk-SMART
 
+0.18	2015-11-17
+	Added example calling script to POD
+	Corrected MANIFEST to remove Makefile
+
 0.17	2015-11-11
 	Updated MANIFEST to remove build files
 
