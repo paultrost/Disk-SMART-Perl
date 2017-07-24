@@ -207,7 +207,7 @@ sub run_short_test {
     my ( $self, $device ) = @_;
     $self->_validate_param($device);
 
-    my $test_out = get_smart_output( $device, '-t short' );
+    my $test_out = _get_smart_output( $device, '-t short' );
     my ($short_test_time) = $test_out =~ /Please wait (.*) minutes/s;
     sleep( $short_test_time * 60 );
 
